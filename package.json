@@ -1,0 +1,22 @@
+{
+  "name": "nezumi-cli",
+  "version": "0.0.1",
+  "description": "command line interface of  nezumi project",
+  "author": "jackyzy823",
+  "main": "./index.js",
+  "dependencies": {
+    "yargs": ">=3.2.1",
+    "nezumi-core": "jackyzy823/nezumi-core"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jackyzy823/nezumi-cli.git"
+  },
+  "scripts": {
+    "test": "node tests/nezumi-cli.test.js"
+  },
+  "bin": {
+    "nezumi": "./index.js"
+  }
+}
