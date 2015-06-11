@@ -11,8 +11,10 @@ var events = require('events');
 var async = require('async');
 var request = require('request');
 
-var multimeter = require('multimeter');
-var multi = multimeter(process);
+// var multimeter = require('multimeter');
+// var multi = multimeter(process);
+var progress = require('progress');
+
 
 process.on('SIGINT', function() {
   console.log(util.format('\rOoops! %s terminated.', info.name));
@@ -46,43 +48,44 @@ urls.forEach(function(url, index) {
     urlLists.forEach(function(item) {
       console.log(item.size);
 
-      // var bar = multi.rel(0, 0);
-      multi.drop(function(bar) {
-        async.forEachOf(item.urls, function(value, index, cb) {
-            var file = fs.createWriteStream(path.resolve(options.o, item.title + '.' + index));
-            var i = 0;
-            var j = 0;
-            file.on('drain', function() {
-              i++;
-            });
-            // file.on('finish', function() {
-            //   console.log(path.resolve(options.o, item.title + '.' + index), 'finish at', i);
-            // });
-            request.get({
-              url: value,
-              headers: downloadOptions.headers,
-              proxy: options.x,
-              encoding: null
-            }).on('response', function(response) {
-              // console.log(response.headers['content-type']);
-              // console.log(response.headers['content-length']);
-            }).on('data', function(data) {
-              var len = data.length;
-              // console.log(len / item.size);
-              // bar.percent(bar.percent() + len / item.size);
-              bar.ratio(len, item.size);
-              // bar.percent(bar.percent() + len / item.size);
-            }).on('end', function() {
-              // console.log('end at', j);
-            }).pipe(file);
-          },
-          function(err) {
-            if (err) {
-              console.trace(err);
-              return;
-            }
-          });
+      var bar = new progress(':bar', {
+        total: item.size
       });
+      async.forEachOf(item.urls, function(value, index, cb) {
+          var file = fs.createWriteStream(path.resolve(options.o, item.title + '.' + index));
+          var i = 0;
+          var j = 0;
+          file.on('drain', function() {
+            i++;
+          });
+          // file.on('finish', function() {
+          //   console.log(path.resolve(options.o, item.title + '.' + index), 'finish at', i);
+          // });
+          request.get({
+            url: value,
+            headers: downloadOptions.headers,
+            proxy: options.x,
+            encoding: null
+          }).on('response', function(response) {
+            // console.log(response.headers['content-type']);
+            // console.log(response.headers['content-length']);
+          }).on('data', function(data) {
+            var len = data.length;
+            // console.log(len / item.size);
+            // bar.percent(bar.percent() + len / item.size);
+            // bar.ratio(len, item.size);
+            bar.tick(len);
+            // bar.percent(bar.percent() + len / item.size);
+          }).on('end', function() {
+            // console.log('end at', j);
+          }).pipe(file);
+        },
+        function(err) {
+          if (err) {
+            console.trace(err);
+            return;
+          }
+        });
 
     });
   });
