@@ -3,10 +3,16 @@
 'use strict'
 var info = require('./package');
 process.title = info.name;
+var fs = require('fs');
 var util = require('util');
 var path = require('path');
 var events = require('events');
 
+var async = require('async');
+var request = require('request');
+
+var multimeter = require('multimeter');
+var multi = multimeter(process);
 
 process.on('SIGINT', function() {
   console.log(util.format('\rOoops! %s terminated.', info.name));
@@ -26,6 +32,62 @@ var options = usage.options;
 // var multi = require('multimeter')(process);
 
 var nezumi = require('../nezumi-core'); // this will be a node module
+
+urls.forEach(function(url, index) {
+  var extractOptions = {
+    proxy: options.x,
+    quality: options.q
+  };
+  nezumi.extract(url, extractOptions, function(err, urlLists, downloadOptions) {
+    if (err) {
+      console.trace(err);
+      return;
+    }
+    urlLists.forEach(function(item) {
+      console.log(item.size);
+
+      // var bar = multi.rel(0, 0);
+      multi.drop(function(bar) {
+        async.forEachOf(item.urls, function(value, index, cb) {
+            var file = fs.createWriteStream(path.resolve(options.o, item.title + '.' + index));
+            var i = 0;
+            var j = 0;
+            file.on('drain', function() {
+              i++;
+            });
+            // file.on('finish', function() {
+            //   console.log(path.resolve(options.o, item.title + '.' + index), 'finish at', i);
+            // });
+            request.get({
+              url: value,
+              headers: downloadOptions.headers,
+              proxy: options.x,
+              encoding: null
+            }).on('response', function(response) {
+              // console.log(response.headers['content-type']);
+              // console.log(response.headers['content-length']);
+            }).on('data', function(data) {
+              var len = data.length;
+              // console.log(len / item.size);
+              // bar.percent(bar.percent() + len / item.size);
+              bar.ratio(len, item.size);
+              // bar.percent(bar.percent() + len / item.size);
+            }).on('end', function() {
+              // console.log('end at', j);
+            }).pipe(file);
+          },
+          function(err) {
+            if (err) {
+              console.trace(err);
+              return;
+            }
+          });
+      });
+
+    });
+  });
+});
+
 // var matchExtractor = require('./lib/matcher.js').match;
 // var extractorFolder = path.join(__dirname, 'lib', 'extractors');
 

@@ -3,10 +3,14 @@
   "version": "0.0.1",
   "description": "command line interface of  nezumi project",
   "author": "jackyzy823",
+  "license": "MIT",
   "main": "./index.js",
   "dependencies": {
-    "yargs": ">=3.2.1",
-    "nezumi-core": "jackyzy823/nezumi-core"
+    "async": "*",
+    "multimeter": "^0.1.1",
+    "nezumi-core": "jackyzy823/nezumi-core",
+    "request": "*",
+    "yargs": ">=3.2.1"
   },
   "devDependencies": {},
   "repository": {
